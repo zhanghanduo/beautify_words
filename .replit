@@ -1,8 +1,15 @@
 modules = ["nodejs-20", "web"]
-run = "node index.js"
+run = "npm run build && npm run preview"
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "node index.js"]
+run = ["sh", "-c", "cd word-card-generator && npm run build && npm run preview"]
+
+[[ports]]
+localPort = 4173
+externalPort = 80
+
+[env]
+PATH = "/nix/var/nix/profiles/default/bin"
