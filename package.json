@@ -1,4 +1,13 @@
 {
+  "name": "beautify_words",
+  "version": "1.0.0",
+  "main": "word-card-generator/index.html",
+  "scripts": {
+    "start": "cd word-card-generator && npm run dev",
+    "build": "cd word-card-generator && npm run build",
+    "preview": "cd word-card-generator && npm run preview",
+    "install": "cd word-card-generator && npm install"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8"
   }

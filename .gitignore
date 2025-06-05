@@ -63,3 +63,4 @@ temp/
 .cache/
 
 .DS_Store
+.replit
