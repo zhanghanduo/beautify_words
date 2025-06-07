@@ -5,7 +5,9 @@ run = "npm run build && npm run preview"
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "cd word-card-generator && npm run build && npm run preview"]
+build = ["sh", "-c", "cd word-card-generator && npm run build"]
+deploymentTarget = "static"
+publicDir = "word-card-generator/dist"
 
 [[ports]]
 localPort = 4173
