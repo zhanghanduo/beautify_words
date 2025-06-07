@@ -9,7 +9,10 @@ const PreviewCard = forwardRef(({
   chineseExplanation,
   isVisible,
   backgroundImageUrl,
-  onBackgroundReady
+  onBackgroundReady,
+  currentBatchIndex,
+  totalBatchCount,
+  isDownloading
 }, ref) => {
   // const cardRef = useRef(null); // Internal ref for direct manipulation if needed, but background is on `ref`
 
@@ -24,7 +27,13 @@ const PreviewCard = forwardRef(({
       const fallbackImageUrl = `https://placehold.co/800x600/2E7D32/FFFFFF?text=背景加载失败&font=notosanssc`;
       
       const setBg = (url, success) => {
-        if (cardContainer) cardContainer.style.backgroundImage = `url('${url}')`;
+        if (cardContainer) {
+          cardContainer.style.backgroundImage = `url('${url}')`;
+          // 确保背景图片始终以固定方式显示
+          cardContainer.style.backgroundSize = 'cover';
+          cardContainer.style.backgroundPosition = 'center';
+          cardContainer.style.backgroundRepeat = 'no-repeat';
+        }
         if (onBackgroundReady) onBackgroundReady(success);
       };
 
@@ -50,7 +59,7 @@ const PreviewCard = forwardRef(({
         style={{
           width: '100%',
           maxWidth: '500px',
-          minHeight: '300px',
+          height: '400px', // 固定高度
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -89,7 +98,7 @@ const PreviewCard = forwardRef(({
           border: '1px solid rgba(255, 255, 255, 0.15)'
         }}>
           <svg style={{width: '32px', height: '32px', color: '#cbd5e1'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z" />
           </svg>
         </div>
         
@@ -142,47 +151,135 @@ const PreviewCard = forwardRef(({
     <div
       ref={ref}
       data-clone-id="preview-card-clone"
-      className="w-full max-w-[500px] min-h-[300px] bg-cover bg-center rounded-2xl shadow-2xl p-7 relative overflow-hidden mx-auto flex flex-col justify-center items-center text-center"
       style={{ 
-        fontFamily: "'Arial', sans-serif"
+        fontFamily: "'Arial', sans-serif",
+        width: '100%',
+        maxWidth: '500px',
+        height: '400px', // 固定高度，确保一致性
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        borderRadius: '20px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+        padding: '30px',
+        position: 'relative',
+        overflow: 'hidden',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center'
       }}
     >
-      {/* Overlay with backdrop blur and darkening */}
+      {/* 增强的遮罩层 - 双层遮罩提高文字可读性 */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-[0.45] rounded-2xl z-0"
         style={{ 
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)' // Safari support
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '20px',
+          zIndex: 0,
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.35) 100%)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)' // Safari support
+        }}
+      ></div>
+
+      {/* 额外的文字背景遮罩 */}
+      <div 
+        style={{ 
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '20px',
+          zIndex: 1,
+          background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 70%, transparent 100%)'
         }}
       ></div>
 
       {/* Content container ensuring it's above the overlay */}
-      <div className="relative z-10 w-full flex flex-col items-center">
+      <div style={{position: 'relative', zIndex: 10, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        {/* 批量模式标识 */}
+        {totalBatchCount > 1 && !isDownloading && (
+          <div style={{
+            position: 'absolute',
+            top: '-10px',
+            right: '-10px',
+            backgroundColor: 'rgba(168, 85, 247, 0.9)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '11px',
+            fontWeight: '600',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+            zIndex: 20
+          }}>
+            {currentBatchIndex + 1}/{totalBatchCount}
+          </div>
+        )}
+        
         <div
-          className="term text-[2.25rem] font-bold mb-3 leading-tight break-words"
-          style={{ color: 'white' }}
+          className="term"
+          style={{ 
+            color: 'white',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', // 响应式字体大小
+            textShadow: '2px 2px 8px rgba(0, 0, 0, 0.9), 1px 1px 4px rgba(0, 0, 0, 0.8)', // 增强文字阴影
+            fontWeight: 'bold',
+            marginBottom: '12px',
+            lineHeight: '1.2',
+            wordBreak: 'break-word'
+          }}
         >
           {englishTerm}
         </div>
 
         {formatPhonetics() && (
           <div
-            className="phonetics text-lg mb-2 font-['Arial',_sans-serif] block"
-            style={{ color: '#e0e0e0' }}
+            className="phonetics"
+            style={{ 
+              color: '#e0e0e0',
+              fontSize: 'clamp(1rem, 2.5vw, 1.125rem)', // 响应式字体大小
+              textShadow: '1px 1px 4px rgba(0, 0, 0, 0.9), 0px 0px 2px rgba(0, 0, 0, 0.8)', // 增强文字阴影
+              marginBottom: '8px',
+              fontFamily: "'Arial', sans-serif",
+              display: 'block'
+            }}
           >
-            <span className="ipa-label font-medium" style={{ color: '#c0c0c0' }}></span>{formatPhonetics()}
+            <span style={{ fontWeight: '500', color: '#c0c0c0' }}></span>{formatPhonetics()}
           </div>
         )}
 
         {/* Divider shown if there are phonetics AND (translation OR explanation) */}
         {formatPhonetics() && (chineseTranslation || chineseExplanation) && (
-          <div className="divider h-px bg-white bg-opacity-30 my-5 w-3/5 mx-auto"></div>
+          <div 
+            style={{
+              height: '1px',
+              background: 'rgba(255, 255, 255, 0.6)',
+              width: '60%',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.5)',
+              margin: '20px auto'
+            }}
+          ></div>
         )}
 
         {chineseTranslation && (
           <div
-            className="translation font-['KaiTi',_'SimKai',_'Noto_Sans_SC',_sans-serif] text-xl font-medium mt-3 leading-relaxed break-words"
-            style={{ color: 'white' }}
+            className="translation"
+            style={{ 
+              color: 'white',
+              fontSize: 'clamp(1.125rem, 3vw, 1.25rem)', // 响应式字体大小
+              textShadow: '2px 2px 8px rgba(0, 0, 0, 0.9), 1px 1px 4px rgba(0, 0, 0, 0.8)', // 增强文字阴影
+              fontFamily: "'KaiTi', 'SimKai', 'Noto Sans SC', sans-serif",
+              fontWeight: '500',
+              marginTop: '12px',
+              lineHeight: '1.6',
+              wordBreak: 'break-word'
+            }}
           >
             {chineseTranslation}
           </div>
@@ -190,8 +287,17 @@ const PreviewCard = forwardRef(({
 
         {chineseExplanation && (
           <div
-            className="explanation font-['KaiTi',_'SimKai',_'Noto_Sans_SC',_sans-serif] text-base mt-3 leading-relaxed break-words"
-            style={{ color: '#f0f0f0', whiteSpace: 'pre-line' }}
+            className="explanation"
+            style={{ 
+              color: '#f0f0f0',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', // 响应式字体大小
+              whiteSpace: 'pre-line',
+              textShadow: '1px 1px 4px rgba(0, 0, 0, 0.9), 0px 0px 2px rgba(0, 0, 0, 0.8)', // 增强文字阴影
+              fontFamily: "'KaiTi', 'SimKai', 'Noto Sans SC', sans-serif",
+              marginTop: '12px',
+              lineHeight: '1.6',
+              wordBreak: 'break-word'
+            }}
           >
             {chineseExplanation}
           </div>
